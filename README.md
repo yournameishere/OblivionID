@@ -11,9 +11,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js)
 
 **OblivionID** is a privacy-preserving identity verification system that allows users to prove compliance (verified, adult, human, non-sanctioned, unique) **without revealing any personal information**. Built on Polygon Amoy testnet with zero-knowledge proofs, AI-powered verification, and soulbound NFTs.
-
-demo video - https://youtu.be/VsNA4scZrKY
-live url - https://oblivion-id.vercel.app/
+ 
 
 ## ✨ What It Does
 
