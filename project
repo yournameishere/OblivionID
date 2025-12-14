@@ -1,0 +1,294 @@
+🛡 OBLIVIONID: Private KYC + Zero-Knowledge Identity Passport
+6
+⭐ WHAT IT DOES (Simple Explanation)
+
+OblivionID allows a user to prove their identity without revealing their identity.
+
+Example:
+
+A user can prove:
+
+“I am 18+”
+
+“I passed KYC”
+
+“I’m not on a sanctions list”
+
+“I’m a unique human (not bot)”
+
+WITHOUT revealing:
+
+Name
+
+Address
+
+Age
+
+ID picture
+
+Real wallet
+
+Nationality
+
+Any documents
+
+This is done using zero-knowledge proofs + stealth addresses + off-chain KYC verification.
+
+⭐ What Problem Does It Solve?
+
+Today, dApps have two bad choices:
+
+❌ 1. Ask for full KYC → Users hate it, privacy lost
+❌ 2. Ask for nothing → They risk legal problems + bots abuse
+
+OblivionID gives the perfect middle solution:
+
+→ dApps confirm rules are satisfied
+→ Users keep 100% privacy
+
+This is a massive need in DeFi, gaming, RWAs, lending, and DAOs.
+
+🧠 HOW IT WORKS (Technical, but simple)
+
+There are three layers:
+
+1️⃣ Off-Chain KYC + AI Verification Layer
+
+The user completes a one-time verification:
+
+Upload ID
+
+Face scan
+
+Liveness detection
+
+Anti-deepfake AI checks
+
+Document authenticity check
+
+This happens off-chain (secure, not on blockchain).
+
+After verification, the system generates:
+
+A zero-knowledge proof confirming identity attributes
+
+A verification certificate (not the document itself)
+
+2️⃣ On-Chain zkPassport (Soulbound NFT)
+
+After verification, user mints a zkPassport SBT on Polygon.
+
+This NFT contains:
+
+✔ Hashes of their verification
+✔ Zero-knowledge proof
+✔ Boolean attributes (true/false):
+
+isAdult
+
+isVerified
+
+isHuman
+
+isNotSanctioned
+
+isUniqueIdentity
+
+❌ No personal info stored
+❌ No images
+❌ No documents
+❌ No name
+
+This passport is non-transferable → tied to user.
+
+3️⃣ Stealth Identity Layer (ERC-5564)
+
+User’s public wallet is NOT connected to their KYC.
+
+Instead, OblivionID:
+
+Generates a stealth identity address
+
+Links zkPassport to stealth identity
+
+Keeps the relationship hidden
+
+So nobody can see:
+
+Which wallet belongs to which KYC’d person
+
+Who is behind a transaction
+
+This is identity privacy with compliance.
+
+👤 USER POINT OF VIEW (Simple, clean flow)
+
+Let's walk through it exactly how a user experiences it.
+
+🧍User POV — Step-by-Step Experience
+STEP 1 — User visits OblivionID website
+
+They see:
+
+“Verify your identity privately. No one will ever see your data.”
+
+They connect their wallet.
+
+STEP 2 — Complete KYC (One-time)
+
+User uploads:
+
+ID
+
+Selfie
+
+Video for liveness detection
+
+AI checks:
+
+Fake image detection
+
+Deepfake detection
+
+Tampered document detection
+
+Country + age validation
+
+After 1 minute:
+
+"Verification complete."
+
+STEP 3 — Mint zkPassport (On Polygon)
+
+User clicks Mint zkPassport.
+
+This creates a Soulbound NFT (non-transferable) that stores:
+
+Verified = true
+
+Age ≥ 18 = true
+
+Sanctioned = false
+
+Unique human = true
+
+But does NOT store:
+
+Name
+
+Age
+
+Country
+
+Photo
+
+Document
+
+The NFT is fully privacy-preserving.
+
+STEP 4 — Connect zkPassport to Stealth Identity
+
+The system automatically generates:
+
+A stealth identity address
+
+A private reference key
+
+User gets:
+
+“Your identity is now completely unlinkable to your wallet.”
+
+So even if someone sees:
+
+Their trades
+
+Their DeFi usage
+
+Their DAO voting
+
+They cannot link it to the KYC identity.
+
+STEP 5 — Use dApps Privately
+
+User goes to a platform:
+
+Lending
+
+Gaming
+
+Governance (DAO voting)
+
+Token launchpad
+
+RWA marketplace
+
+NFT mint with anti-bot rules
+
+Airdrop protection
+
+They click:
+
+“Verify with OblivionID”
+
+The dApp receives:
+
+True/False values (Is user verified? Is user 18+?)
+
+A zkProof (cannot be faked)
+
+The dApp NEVER gets personal data.
+
+STEP 6 — User Interacts with dApps With Full Privacy
+
+User can:
+
+✔ Borrow without revealing identity
+✔ Enter 18+ games without showing age
+✔ Claim tokens without bots
+✔ Vote privately in DAOs
+✔ Join KYC-required platforms anonymously
+✔ Access RWA platforms without oversharing
+
+Everything is:
+
+permissionless
+
+private
+
+trustless
+
+compliant
+
+🎯 REAL EXAMPLES (to make it SUPER clear)
+Example 1 — User wants to join a DeFi lending protocol
+
+Traditional:
+❌ must submit KYC
+❌ reveals identity
+❌ privacy gone
+
+OblivionID:
+✔ Proves "Verified"
+✔ Proves “Not sanctioned"
+✔ Proves “Human"
+✔ dApp accepts instantly
+✔ No personal info exposed
+
+Example 2 — User wants to mint an age-restricted NFT collection
+
+Traditional:
+❌ User must submit ID
+
+OblivionID:
+✔ Provides zkProof that user is 18+
+❌ Does not show actual age
+❌ Does not show name
+✔ Mint allowed
+
+Example 3 — User wants to vote in a DAO but privately
+
+✔ DAO checks “unique human”
+✔ DAO checks “verified identity”
+❌ Does not see user wallet
+❌ Does not see any metadata
+✔ User votes anonymously

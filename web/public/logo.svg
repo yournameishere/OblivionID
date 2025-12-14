@@ -1,0 +1,20 @@
+<svg width="480" height="160" viewBox="0 0 480 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="480" height="160" rx="20" fill="#0b1220"/>
+  <circle cx="80" cy="80" r="54" fill="url(#g1)" opacity="0.9"/>
+  <circle cx="140" cy="60" r="40" fill="url(#g2)" opacity="0.6"/>
+  <path d="M240 45C220 45 205 60 205 80C205 100 220 115 240 115C260 115 275 100 275 80C275 60 260 45 240 45ZM240 60C252 60 262 70 262 82C262 94 252 104 240 104C228 104 218 94 218 82C218 70 228 60 240 60Z" fill="#6ee7ff"/>
+  <path d="M305 48H335C354 48 368 61 368 80C368 99 354 112 335 112H305V48ZM320 62V98H335C343 98 350 91 350 80C350 69 343 62 335 62H320Z" fill="#8b5cf6"/>
+  <path d="M385 48H401L428 112H411L406 99H380L375 112H358L385 48ZM401 86L393 65L385 86H401Z" fill="#22d3ee"/>
+  <defs>
+    <linearGradient id="g1" x1="40" y1="30" x2="120" y2="130" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6ee7ff"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="110" y1="30" x2="170" y2="100" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22d3ee"/>
+      <stop offset="1" stop-color="#6ee7ff" stop-opacity="0.8"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+

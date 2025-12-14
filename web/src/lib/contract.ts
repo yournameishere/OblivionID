@@ -1,0 +1,9 @@
+export const PASSPORT_ADDRESS =
+  process.env.NEXT_PUBLIC_PASSPORT_ADDRESS ||
+  "0x3780f8b9f618e8e7fd0be2e209617e583f0e325c";
+
+export const VERIFIER_ADDRESS =
+  process.env.NEXT_PUBLIC_VERIFIER_ADDRESS ||
+  "0xd749736bb339b44639bcaef09ac2248dee0b7a39";
+
+

@@ -1,0 +1,239 @@
+HOW THE KYC PROCESS WORKS INTERNALLY
+
+Let’s break the process into simple steps.
+
+STEP 1 — User uploads ID + selfie + liveness video.
+
+Our AI verifies:
+
+Face matches ID
+
+ID is not forged
+
+Video is real human (anti-deepfake)
+
+Document is valid
+
+Nationality + age rules
+
+Sanctions/PEP check
+
+Detect if user used this ID before (duplicate prevention)
+
+STEP 2 — We extract ONLY verification results
+
+Example results:
+
+age ≥ 18
+
+nationality = IN
+
+sanctioned = false
+
+faceMatchScore = 97%
+
+human = true
+
+document validity = true
+
+STEP 3 — Zero-Knowledge circuit generates zkProof
+
+A SNARK/STARK circuit encodes:
+
+Verified = true
+
+Age ≥ 18
+
+Not sanctioned
+
+Human verified
+
+Unique identity
+
+The circuit produces:
+
+proof.hash
+
+publicSignals
+
+This is the ONLY thing sent on-chain.
+
+STEP 4 — Mint zkPassport (Soulbound NFT) on Polygon
+
+The NFT stores:
+
+isVerified: true
+
+ageFlag: true
+
+sanctionFlag: false
+
+humanFlag: true
+
+identityHash: <encrypted>
+
+ALL personal data is thrown away.
+
+STEP 5 — Link zkPassport to a stealth identity
+
+We use ERC-5564 stealth addresses:
+
+generate a stealth wallet
+
+link the passport to it
+
+user never reveals real identity wallet
+
+no one knows which wallet belongs to which person
+
+
+
+
+Tech Stack Required
+
+Here is the complete tech stack for OblivionID:
+
+🔵 BLOCKCHAIN (On-Chain Layer) — Polygon
+
+Used for:
+
+zkPassport (Soulbound NFT)
+
+Proof verification
+
+Storing encrypted identity commitments
+
+Storing boolean attributes (isAdult, isVerified, isHuman, etc.)
+
+Stealth address (ERC-5564) use
+
+Tech needed:
+
+Polygon PoS or Polygon zkEVM
+
+Solidity
+
+Hardhat / Foundry
+
+OpenZeppelin libraries
+
+zkVerifier contract
+
+ERC-5564 stealth address system
+
+🔴 ZK LAYER (Zero-Knowledge Proof Engine)
+
+Used to create proofs such as:
+
+“Age ≥ 18”
+
+“Document valid”
+
+“Not sanctioned”
+
+“Human verified”
+
+“Identity uniqueness”
+
+Tech needed:
+
+circom / snarkjs (circuits)
+
+zk-SNARKs or zk-STARKs
+
+Groth16 proving system (fast & cheap)
+
+Or advanced:
+
+Noir (optional)
+
+Polygon's zkEVM verifier precompile (optional)
+
+🟣 OFF-CHAIN BACKEND (KYC + AI Layer)
+
+Used for:
+
+Document processing
+
+Face match
+
+Liveness detection
+
+Deepfake detection
+
+Age extraction
+
+Nationality extraction
+
+Sanction list check
+
+Generating ZK witness
+
+Storing temporary encrypted data
+
+Tech needed:
+
+Node.js (Fastify/Nest.js)
+
+Python (AI models)
+
+Identity verification SDKs
+
+OCR (Tesseract or Vision API)
+
+Deepfake detection AI model
+
+Face recognition model (Facenet, ArcFace)
+
+🟡 FRONTEND (User Interface Layer)
+
+Used for:
+
+Wallet connect
+
+KYC upload
+
+Dashboard
+
+Minting zkPassport
+
+Connecting to dApps
+
+Tech needed:
+
+Next.js
+
+React
+
+Tailwind CSS
+
+Wagmi + Viem
+
+Web3Modal / RainbowKit
+
+File upload components
+
+
+
+
+
+DB Options:
+MongoDB
+But once the zkPassport is minted:
+
+❗ ALL user’s personal data must be deleted.
+
+
+
+
+
+
+
+
+
+
+bro create teh aurthetication profile verything end to end from sigin to veeything and we see when user lick on get start then we will ask him to their detail and then comple thei rprofile and after that we will redirect them to thier dahbord perdonal dahbor dinwhich he can view thei rporifle and also update teh credtinal he have upload 
+and also add some more conetct in hoem page and otehr page there is lot lot error also and imporve teh ui bro i really dont liek the ui and make it good adn also run te npm run build and if any error then fix that error and give teh websiet final ui touch see i want you to really imporve teh ui anhd withextar contect eveything with make it perfect and add some good feture and make sure that the also amke sure that teh smart corntatc an d fornetdn is linek dan dweveything is wokring on chain and with godo ui and logical routes funcational can you cheak imporve teh websiet 
+
+see thgsi is teh project detaili want and make it perfect add some
+make sure teh weveything is wokring liek i want mak etehg websiet as i want 
