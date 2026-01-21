@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import { Nav } from "@/components/Nav";
+import { ToastContainer } from "@/components/toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,6 +27,7 @@ export default function RootLayout({
         <Providers>
           <Nav />
           {children}
+          <ToastContainer />
         </Providers>
       </body>
     </html>

@@ -3,37 +3,47 @@
 import { useAccount } from "wagmi";
 import axios from "axios";
 import { useState } from "react";
+import { useToast } from "./toast";
 
 type Step = "idle" | "requesting" | "signing" | "minting" | "done" | "error";
 
 export default function MintCard() {
   const { address, chainId } = useAccount();
+  const toast = useToast();
   const [sessionId, setSessionId] = useState("");
   const [metadataURI, setMetadataURI] = useState("ipfs://mock-meta");
   const [err, setErr] = useState<string | null>(null);
   const [step, setStep] = useState<Step>("idle");
   const [prepared, setPrepared] = useState<any | null>(null);
-
+  const [tokenId, setTokenId] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
 
   async function requestPayload() {
     if (!sessionId) {
-      setErr("Enter proof handle from KYC step.");
+      const errorMsg = "Enter proof handle from KYC step.";
+      setErr(errorMsg);
+      toast.error(errorMsg);
       return;
     }
     if (!address) {
-      setErr("Please connect your wallet first.");
+      const errorMsg = "Please connect your wallet first.";
+      setErr(errorMsg);
+      toast.error(errorMsg);
       return;
     }
     setErr(null);
     setStep("requesting");
+    toast.info("Preparing your zkPassport payload...");
     try {
       const res = await axios.post("/api/proof/issue", { sessionId, address });
       setPrepared(res.data);
       setStep("signing");
+      toast.success("Payload prepared! Ready to mint.");
     } catch (e: any) {
-      setErr(e?.response?.data?.error || e.message || "Failed to prepare mint");
+      const errorMsg = e?.response?.data?.error || e.message || "Failed to prepare mint";
+      setErr(errorMsg);
       setStep("error");
+      toast.error(errorMsg);
     }
   }
 
