@@ -4,6 +4,7 @@ import { useAccount } from "wagmi";
 import axios from "axios";
 import { useState } from "react";
 import { useToast } from "./toast";
+import LoadingSpinner from "./loading-spinner";
 
 type Step = "idle" | "requesting" | "signing" | "minting" | "done" | "error";
 
@@ -122,17 +123,19 @@ export default function MintCard() {
       <div className="flex gap-3 flex-wrap items-center pt-4">
         <button
           onClick={requestPayload}
-          className="btn-secondary disabled:opacity-60 disabled:cursor-not-allowed px-6 py-3"
+          className="btn-secondary disabled:opacity-60 disabled:cursor-not-allowed px-6 py-3 flex items-center gap-2"
           disabled={step === "requesting" || !sessionId}
         >
+          {step === "requesting" && <LoadingSpinner size="sm" />}
           {step === "requesting" ? "Preparing..." : "Prepare Payload"}
         </button>
         <button
           onClick={mint}
-          className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed px-6 py-3"
+          className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed px-6 py-3 flex items-center gap-2"
           disabled={!prepared || step === "minting" || step === "done"}
         >
-          {step === "minting" ? "Minting..." : step === "done" ? "Minted!" : "Mint zkPassport"}
+          {step === "minting" && <LoadingSpinner size="sm" className="border-white border-t-transparent" />}
+          {step === "minting" ? "Minting..." : step === "done" ? "Minted! ✓" : "Mint zkPassport"}
         </button>
       </div>
 

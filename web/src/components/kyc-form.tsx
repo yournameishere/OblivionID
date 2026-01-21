@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAccount } from "wagmi";
 import { useToast } from "./toast";
+import LoadingSpinner from "./loading-spinner";
 
 type Status =
   | { state: "idle" }
@@ -213,9 +214,12 @@ export default function KycForm() {
       <div className="flex gap-3 items-center flex-wrap">
         <button
           onClick={submit}
-          className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed px-6 py-3"
+          className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed px-6 py-3 flex items-center gap-2"
           disabled={status.state === "submitting" || status.state === "processing" || !isConnected}
         >
+          {(status.state === "submitting" || status.state === "processing") && (
+            <LoadingSpinner size="sm" className="border-white border-t-transparent" />
+          )}
           {status.state === "submitting"
             ? "Starting verification..."
             : status.state === "processing"
