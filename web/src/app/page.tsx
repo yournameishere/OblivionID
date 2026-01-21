@@ -65,22 +65,22 @@ export default function Home() {
     <main className="min-h-screen">
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-6 py-20">
-        <div className="text-center mb-16">
-          <p className="text-cyan-300 uppercase text-sm tracking-[0.3em] mb-4">
+        <div className="text-center mb-16 animate-fade-in">
+          <p className="text-cyan-300 uppercase text-sm tracking-[0.3em] mb-4 animate-slide-in-left">
             Polygon Amoy · zk-SBT · ERC-5564
           </p>
-          <h1 className="text-6xl md:text-7xl font-bold gradient-text mb-6 leading-tight">
+          <h1 className="text-6xl md:text-7xl font-bold gradient-text mb-6 leading-tight animate-scale-in">
             OblivionID
           </h1>
-          <p className="text-2xl text-slate-200/90 max-w-3xl mx-auto mb-8">
+          <p className="text-2xl text-slate-200/90 max-w-3xl mx-auto mb-8 animate-fade-in" style={{animationDelay: '0.2s', opacity: 0, animationFillMode: 'forwards'}}>
             Private identity, public compliance. Verify once, prove everywhere.
           </p>
-          <p className="text-lg text-slate-300/80 max-w-2xl mx-auto mb-10">
+          <p className="text-lg text-slate-300/80 max-w-2xl mx-auto mb-10 animate-fade-in" style={{animationDelay: '0.4s', opacity: 0, animationFillMode: 'forwards'}}>
             Off-chain AI/KYC validation → ZK proof → Soulbound zkPassport on Polygon →
             Stealth-ready identity. No raw PII leaves the backend; only flags and commitments hit chain.
           </p>
-          <div className="flex gap-4 justify-center flex-wrap">
-            <Link href="/start" className="btn-primary text-lg px-8 py-4">
+          <div className="flex gap-4 justify-center flex-wrap animate-fade-in" style={{animationDelay: '0.6s', opacity: 0, animationFillMode: 'forwards'}}>
+            <Link href="/start" className="btn-primary text-lg px-8 py-4 hover:shadow-2xl hover:shadow-blue-500/50 transition-all duration-300">
               Get Started
             </Link>
             <Link href="/docs" className="btn-secondary text-lg px-8 py-4">
@@ -92,9 +92,13 @@ export default function Home() {
         {/* Feature Cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
           {features.map((feature, idx) => (
-            <div key={idx} className="card-3d p-6 hover:scale-105 transition-transform">
-              <div className="text-4xl mb-4">{feature.icon}</div>
-              <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+            <div 
+              key={idx} 
+              className="card-3d p-6 hover:scale-105 transition-all duration-300 hover:border-cyan-500/30 animate-fade-in"
+              style={{animationDelay: `${0.8 + idx * 0.1}s`, opacity: 0, animationFillMode: 'forwards'}}
+            >
+              <div className="text-4xl mb-4 transition-transform hover:scale-110">{feature.icon}</div>
+              <h3 className="text-xl font-semibold mb-2 bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">{feature.title}</h3>
               <p className="text-sm text-slate-300/80">{feature.desc}</p>
             </div>
           ))}
