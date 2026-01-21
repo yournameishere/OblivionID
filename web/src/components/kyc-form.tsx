@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAccount } from "wagmi";
+import { useToast } from "./toast";
 
 type Status =
   | { state: "idle" }
@@ -13,6 +14,7 @@ type Status =
 
 export default function KycForm() {
   const { address, isConnected } = useAccount();
+  const toast = useToast();
   const [status, setStatus] = useState<Status>({ state: "idle" });
   const [existingKyc, setExistingKyc] = useState<any>(null);
   const [loadingKyc, setLoadingKyc] = useState(true);
@@ -55,21 +57,28 @@ export default function KycForm() {
 
   async function submit() {
     if (!isConnected || !address) {
-      setStatus({ state: "error", message: "Please connect your wallet first" });
+      const msg = "Please connect your wallet first";
+      setStatus({ state: "error", message: msg });
+      toast.error(msg);
       return;
     }
 
     if (!form.fullName || !form.country || !form.age) {
-      setStatus({ state: "error", message: "Please fill all fields" });
+      const msg = "Please fill all fields";
+      setStatus({ state: "error", message: msg });
+      toast.error(msg);
       return;
     }
 
     if (!files.id || !files.selfie || !files.liveness) {
-      setStatus({ state: "error", message: "Please upload all required files (ID, selfie, and liveness video)" });
+      const msg = "Please upload all required files (ID, selfie, and liveness video)";
+      setStatus({ state: "error", message: msg });
+      toast.error(msg);
       return;
     }
 
     setStatus({ state: "submitting" });
+    toast.info("Starting KYC verification process...");
     try {
       const body = new FormData();
       body.append("fullName", form.fullName);
@@ -93,11 +102,14 @@ export default function KycForm() {
 
       if (res.data.verified) {
         setStatus({ state: "done", sessionId: res.data.sessionId, verified: true });
+        toast.success(`KYC verification successful! Session ID: ${res.data.sessionId.slice(0, 8)}...`);
       } else {
+        const msg = res.data.error || "Verification failed. Please check your documents and try again.";
         setStatus({
           state: "error",
-          message: res.data.error || "Verification failed. Please check your documents and try again.",
+          message: msg,
         });
+        toast.error(msg);
       }
     } catch (err: any) {
       const errorMessage = err?.response?.data?.error || err?.message || "Verification failed";
@@ -105,6 +117,7 @@ export default function KycForm() {
         state: "error",
         message: errorMessage,
       });
+      toast.error(errorMessage);
     }
   }
 

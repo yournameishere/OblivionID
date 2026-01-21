@@ -51,6 +51,8 @@ export default function MintCard() {
     if (!prepared || !address || !sessionId) return;
     try {
       setStep("minting");
+      setErr(null);
+      toast.info("Minting your zkPassport... This may take a moment.");
       
       // Use backend minting service (has MINTER_ROLE)
       const res = await axios.post("/api/mint", {
@@ -61,14 +63,18 @@ export default function MintCard() {
 
       if (res.data.success) {
         setTxHash(res.data.txHash);
+        setTokenId(res.data.tokenId);
         setStep("done");
         setErr(null);
+        toast.success(`zkPassport minted successfully! Token ID: ${res.data.tokenId || 'Pending'}`);
       } else {
         throw new Error(res.data.error || "Minting failed");
       }
     } catch (e: any) {
-      setErr(e?.response?.data?.error || e?.message || "Mint failed");
+      const errorMsg = e?.response?.data?.error || e?.message || "Mint failed";
+      setErr(errorMsg);
       setStep("error");
+      toast.error(errorMsg);
     }
   }
 
@@ -131,12 +137,28 @@ export default function MintCard() {
       </div>
 
       {step === "done" && txHash && (
-        <div className="bg-emerald-500/20 border border-emerald-500/50 rounded-xl p-4">
-          <p className="text-emerald-300 font-semibold">✓ Passport Minted Successfully!</p>
-          <p className="text-sm text-emerald-300/80 mt-2">
-            Transaction Hash: <span className="font-mono text-xs">{txHash}</span>
+        <div className="bg-emerald-500/20 border border-emerald-500/50 rounded-xl p-4 animate-scale-in">
+          <p className="text-emerald-300 font-semibold text-lg mb-3">✓ Passport Minted Successfully!</p>
+          {tokenId && (
+            <p className="text-sm text-emerald-300/80 mb-2">
+              <span className="font-semibold">Token ID:</span> <span className="font-mono text-base">{tokenId}</span>
+            </p>
+          )}
+          <p className="text-sm text-emerald-300/80 mb-2">
+            <span className="font-semibold">Transaction Hash:</span>
           </p>
-          <p className="text-sm text-emerald-300/80 mt-2">
+          <p className="font-mono text-xs break-all text-emerald-300/90 bg-black/20 p-2 rounded mb-3">
+            {txHash}
+          </p>
+          <a
+            href={`https://amoy.polygonscan.com/tx/${txHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-sm text-emerald-300 hover:text-emerald-200 transition"
+          >
+            View on PolygonScan →
+          </a>
+          <p className="text-sm text-emerald-300/80 mt-3">
             Your zkPassport has been minted. Check your dashboard to view it.
           </p>
         </div>
