@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMongoClient } from "@/lib/db";
 
+// Make this route dynamic to prevent static generation during build
+export const dynamic = 'force-dynamic';
+
 /**
  * Get user's KYC status and history
  * Supports both GET (with address query param) and POST (with address in body)

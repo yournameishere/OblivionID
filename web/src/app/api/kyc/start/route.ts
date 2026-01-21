@@ -4,6 +4,9 @@ import { randomBytes, createHash } from "crypto";
 import { verifyIDDocument, verifyLivenessVideo, checkSanctions } from "@/lib/gemini";
 import { uploadToPinata } from "@/lib/pinata";
 
+// Make this route dynamic to prevent static generation during build
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
   try {
     const form = await req.formData();

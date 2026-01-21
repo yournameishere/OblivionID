@@ -6,6 +6,9 @@ import { polygonAmoy } from "viem/chains";
 import { PASSPORT_ADDRESS, VERIFIER_ADDRESS } from "@/lib/contract";
 import { passportAbi } from "@/lib/abi";
 
+// Make this route dynamic to prevent static generation during build
+export const dynamic = 'force-dynamic';
+
 /**
  * Backend minting service
  * This service has MINTER_ROLE and mints passports on behalf of users

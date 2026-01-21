@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMongoClient } from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   const sessionId = req.nextUrl.searchParams.get("id");
   if (!sessionId) {

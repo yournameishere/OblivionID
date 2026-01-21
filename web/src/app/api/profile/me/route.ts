@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getMongoClient } from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: Request) {
   const { address } = await req.json();
   if (!address) return NextResponse.json({ error: "address required" }, { status: 400 });

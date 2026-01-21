@@ -3,6 +3,9 @@ import { getMongoClient } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { NextRequest } from "next/server";
 
+// Make this route dynamic to prevent static generation during build
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     // Authentication check (this also reads the body)

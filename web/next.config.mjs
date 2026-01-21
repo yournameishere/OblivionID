@@ -23,7 +23,7 @@ const nextConfig = {
   },
 
   // Webpack optimizations
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, webpack }) => {
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -32,6 +32,37 @@ const nextConfig = {
         tls: false,
       };
     }
+    
+    // Ignore optional dependencies that cause build warnings
+    // These are React Native and dev-only dependencies that aren't needed for web builds
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^@react-native-async-storage\/async-storage$/,
+      }),
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^pino-pretty$/,
+      })
+    );
+    
+    // Suppress specific webpack warnings for optional dependencies
+    const originalEntry = config.entry;
+    config.entry = async () => {
+      const entries = await originalEntry();
+      return entries;
+    };
+    
+    // Ignore warnings for optional dependencies
+    config.ignoreWarnings = [
+      {
+        module: /node_modules\/@metamask\/sdk/,
+      },
+      {
+        module: /node_modules\/pino/,
+      },
+      /Can't resolve '@react-native-async-storage\/async-storage'/,
+      /Can't resolve 'pino-pretty'/,
+    ];
+    
     return config;
   },
 
