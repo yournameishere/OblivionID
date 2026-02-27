@@ -4,6 +4,7 @@ import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { useAuthPayload } from "@/lib/useAuthPayload";
 
 type Profile = {
   fullName: string;
@@ -16,8 +17,10 @@ type Profile = {
 
 export default function ProfileForm({ redirectTo }: { redirectTo?: string }) {
   const { address, isConnected } = useAccount();
+  const { getAuthPayload } = useAuthPayload();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [authPayload, setAuthPayload] = useState<{ address: string; message: string; signature: string } | null>(null);
   const [profile, setProfile] = useState<Profile>({
     fullName: "",
     email: "",
@@ -29,32 +32,38 @@ export default function ProfileForm({ redirectTo }: { redirectTo?: string }) {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
-  useEffect(() => {
-    async function load() {
-      if (!address) {
-        setIsLoadingProfile(false);
-        return;
+  async function loadProfile(payload: { address: string; message: string; signature: string }) {
+    try {
+      const res = await axios.post("/api/profile/me", payload);
+      if (res.data?.profile) {
+        setProfile({
+          fullName: res.data.profile.fullName || "",
+          email: res.data.profile.email || "",
+          country: res.data.profile.country || "",
+          phone: res.data.profile.phone || "",
+          dateOfBirth: res.data.profile.dateOfBirth || "",
+          bio: res.data.profile.bio || "",
+        });
       }
-      try {
-        const res = await axios.post("/api/profile/me", { address });
-        if (res.data?.profile) {
-          setProfile({
-            fullName: res.data.profile.fullName || "",
-            email: res.data.profile.email || "",
-            country: res.data.profile.country || "",
-            phone: res.data.profile.phone || "",
-            dateOfBirth: res.data.profile.dateOfBirth || "",
-            bio: res.data.profile.bio || "",
-          });
-        }
-      } catch (e) {
-        console.error("Failed to load profile:", e);
-      } finally {
-        setIsLoadingProfile(false);
-      }
+    } catch (e) {
+      console.error("Failed to load profile:", e);
+    } finally {
+      setIsLoadingProfile(false);
     }
-    load();
+  }
+
+  useEffect(() => {
+    if (!address) setIsLoadingProfile(false);
   }, [address]);
+
+  async function handleSignIn() {
+    const payload = await getAuthPayload();
+    if (payload) {
+      setAuthPayload(payload);
+      setIsLoadingProfile(true);
+      await loadProfile(payload);
+    }
+  }
 
   async function submit() {
     if (!isConnected || !address) {
@@ -76,8 +85,14 @@ export default function ProfileForm({ redirectTo }: { redirectTo?: string }) {
 
     setLoading(true);
     setMessage(null);
+    const payload = authPayload || await getAuthPayload();
+    if (!payload) {
+      setMessage({ type: "error", text: "Please sign in first." });
+      setLoading(false);
+      return;
+    }
     try {
-      await axios.post("/api/profile/set", { address, ...profile });
+      await axios.post("/api/profile/set", { ...payload, ...profile });
       setMessage({ type: "success", text: "Profile saved successfully!" });
       
       // Redirect after a short delay
@@ -102,6 +117,17 @@ export default function ProfileForm({ redirectTo }: { redirectTo?: string }) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-slate-300">Loading profile...</div>
+      </div>
+    );
+  }
+
+  if (address && !authPayload) {
+    return (
+      <div className="space-y-4">
+        <p className="text-slate-300">Sign in with your wallet to view and edit your profile.</p>
+        <button onClick={handleSignIn} className="btn-primary">
+          Sign In
+        </button>
       </div>
     );
   }

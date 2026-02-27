@@ -5,11 +5,13 @@ import axios from "axios";
 import { useState } from "react";
 import { useToast } from "./toast";
 import LoadingSpinner from "./loading-spinner";
+import { useAuthPayload } from "@/lib/useAuthPayload";
 
 type Step = "idle" | "requesting" | "signing" | "minting" | "done" | "error";
 
 export default function MintCard() {
   const { address, chainId } = useAccount();
+  const { getAuthPayload } = useAuthPayload();
   const toast = useToast();
   const [sessionId, setSessionId] = useState("");
   const [metadataURI, setMetadataURI] = useState("ipfs://mock-meta");
@@ -35,8 +37,14 @@ export default function MintCard() {
     setErr(null);
     setStep("requesting");
     toast.info("Preparing your zkPassport payload...");
+    const authPayload = await getAuthPayload();
+    if (!authPayload) {
+      setErr("Please sign in with your wallet.");
+      toast.error("Sign in required");
+      return;
+    }
     try {
-      const res = await axios.post("/api/proof/issue", { sessionId, address });
+      const res = await axios.post("/api/proof/issue", { sessionId, ...authPayload });
       setPrepared(res.data);
       setStep("signing");
       toast.success("Payload prepared! Ready to mint.");
@@ -54,12 +62,19 @@ export default function MintCard() {
       setStep("minting");
       setErr(null);
       toast.info("Minting your zkPassport... This may take a moment.");
-      
+      const authPayload = await getAuthPayload();
+      if (!authPayload) {
+        setErr("Please sign in with your wallet.");
+        toast.error("Sign in required");
+        return;
+      }
       // Use backend minting service (has MINTER_ROLE)
       const res = await axios.post("/api/mint", {
         sessionId,
         userAddress: address,
         metadataURI,
+        message: authPayload.message,
+        signature: authPayload.signature,
       });
 
       if (res.data.success) {

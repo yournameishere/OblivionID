@@ -4,6 +4,7 @@ import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Link from "next/link";
+import { useAuthPayload } from "@/lib/useAuthPayload";
 
 type Profile = {
   fullName: string;
@@ -18,30 +19,56 @@ type Profile = {
 
 export default function ProfileView() {
   const { address } = useAccount();
+  const { getAuthPayload } = useAuthPayload();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [needsSignIn, setNeedsSignIn] = useState(false);
+
+  async function loadProfile(payload: { address: string; message: string; signature: string }) {
+    try {
+      const res = await axios.post("/api/profile/me", payload);
+      if (res.data?.profile) {
+        setProfile(res.data.profile);
+      }
+      setNeedsSignIn(false);
+    } catch (e) {
+      if ((e as any)?.response?.status === 401) setNeedsSignIn(true);
+      else console.error("Failed to load profile:", e);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    async function load() {
-      if (!address) {
-        setLoading(false);
-        return;
-      }
+    if (!address) {
+      setLoading(false);
+      return;
+    }
+    async function tryLoad() {
       try {
         const res = await axios.post("/api/profile/me", { address });
-        if (res.data?.profile) {
-          setProfile(res.data.profile);
-        }
-      } catch (e) {
-        console.error("Failed to load profile:", e);
+        if (res.data?.profile) setProfile(res.data.profile);
+        setNeedsSignIn(false);
+      } catch (e: any) {
+        if (e?.response?.status === 401) setNeedsSignIn(true);
+        else console.error("Failed to load profile:", e);
       } finally {
         setLoading(false);
       }
     }
-    load();
+    setLoading(true);
+    tryLoad();
   }, [address]);
 
-  if (loading) {
+  async function handleSignIn() {
+    const payload = await getAuthPayload();
+    if (payload) {
+      setLoading(true);
+      await loadProfile(payload);
+    }
+  }
+
+  if (loading && !needsSignIn) {
     return (
       <div className="flex items-center justify-center py-8">
         <div className="text-slate-300">Loading profile...</div>
@@ -49,7 +76,18 @@ export default function ProfileView() {
     );
   }
 
-  if (!profile) {
+  if (address && needsSignIn) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-slate-300/70 mb-4">Sign in with your wallet to view your profile.</p>
+        <button onClick={handleSignIn} className="btn-primary">
+          Sign In
+        </button>
+      </div>
+    );
+  }
+
+  if (!profile && !loading) {
     return (
       <div className="text-center py-8">
         <p className="text-slate-300/70 mb-4">No profile found. Create one to get started!</p>
@@ -59,6 +97,8 @@ export default function ProfileView() {
       </div>
     );
   }
+
+  if (!profile) return null;
 
   return (
     <div className="space-y-4">
