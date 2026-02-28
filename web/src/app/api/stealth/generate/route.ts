@@ -1,10 +1,7 @@
-import { randomBytes } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/ratelimit";
-
-function randomAddress() {
-  return "0x" + randomBytes(20).toString("hex");
-}
+import { generateStealthMetaAddress, generateStealthAddress } from "@/lib/stealth";
+import { auditLog } from "@/lib/audit";
 
 export async function POST(req: NextRequest) {
   const rl = checkRateLimit(req, RATE_LIMITS.stealth);
@@ -14,9 +11,17 @@ export async function POST(req: NextRequest) {
       { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetIn / 1000)) } }
     );
   }
-  const stealthAddress = randomAddress();
-  const viewingKey = "vk-" + randomBytes(16).toString("hex");
-  return NextResponse.json({ stealthAddress, viewingKey });
+  const { stealthMetaAddress, spendingKey, viewingKey } = generateStealthMetaAddress();
+  const { stealthAddress, ephemeralPubKey, viewTag } = generateStealthAddress(stealthMetaAddress);
+  await auditLog("stealth_generate", { stealthMetaAddress: stealthMetaAddress.slice(0, 20) + "..." });
+  return NextResponse.json({
+    stealthMetaAddress,
+    stealthAddress,
+    spendingKey,
+    viewingKey,
+    ephemeralPubKey,
+    viewTag,
+  });
 }
 
 

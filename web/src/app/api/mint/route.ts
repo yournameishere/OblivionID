@@ -9,6 +9,7 @@ import { checkRateLimit, RATE_LIMITS } from "@/lib/ratelimit";
 import { logger } from "@/lib/logger";
 import { auditLog } from "@/lib/audit";
 import { verifyWalletAuth } from "@/lib/auth";
+import { unpinFromPinata } from "@/lib/pinata";
 
 // Make this route dynamic to prevent static generation during build
 export const dynamic = 'force-dynamic';
@@ -192,6 +193,12 @@ export async function POST(req: NextRequest) {
         txHash: hash,
         tokenId: tokenId?.toString(),
       });
+
+      // Document deletion: unpin KYC documents from IPFS after successful mint
+      const ipfs = session.ipfsHashes || {};
+      if (ipfs.id) await unpinFromPinata(ipfs.id);
+      if (ipfs.selfie) await unpinFromPinata(ipfs.selfie);
+      if (ipfs.liveness) await unpinFromPinata(ipfs.liveness);
 
       // Update session with minting info including token ID
       await col.updateOne(

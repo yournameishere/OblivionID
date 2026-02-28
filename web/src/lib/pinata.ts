@@ -119,3 +119,28 @@ export async function uploadMetadataToPinata(
   }
 }
 
+/**
+ * Unpin (delete) file from Pinata IPFS
+ * Call after verification/mint for privacy-first document deletion
+ */
+export async function unpinFromPinata(ipfsHash: string): Promise<void> {
+  if (!ipfsHash) return;
+  if (!PINATA_JWT && (!PINATA_API_KEY || !PINATA_SECRET_KEY)) {
+    logger.warn("Pinata credentials not configured; skip unpin");
+    return;
+  }
+
+  try {
+    const headers: Record<string, string> = {};
+    if (PINATA_JWT) {
+      headers.Authorization = `Bearer ${PINATA_JWT}`;
+    } else {
+      headers.pinata_api_key = PINATA_API_KEY!;
+      headers.pinata_secret_api_key = PINATA_SECRET_KEY!;
+    }
+    await axios.delete(`https://api.pinata.cloud/pinning/unpin/${ipfsHash}`, { headers });
+  } catch (error: any) {
+    logger.warn({ err: error, ipfsHash }, "Pinata unpin failed (non-fatal)");
+  }
+}
+

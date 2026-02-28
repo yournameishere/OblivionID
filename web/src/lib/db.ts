@@ -13,7 +13,7 @@ const globalForMongo = globalThis as unknown as {
 export async function getMongoClient() {
   if (globalForMongo.mongoClient) return globalForMongo.mongoClient;
   if (!uri) throw new Error("MONGODB_URI missing");
-  const client = new MongoClient(uri);
+  const client = new MongoClient(uri, { maxPoolSize: 10 });
   await client.connect();
   globalForMongo.mongoClient = client;
   return client;

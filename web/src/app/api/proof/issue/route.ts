@@ -5,6 +5,7 @@ import { NextRequest } from "next/server";
 import { checkRateLimit, RATE_LIMITS } from "@/lib/ratelimit";
 import { logger } from "@/lib/logger";
 import { auditLog } from "@/lib/audit";
+import { generatePassportProof } from "@/lib/zk";
 
 // Make this route dynamic to prevent static generation during build
 export const dynamic = 'force-dynamic';
@@ -51,10 +52,7 @@ export async function POST(req: NextRequest) {
     // Verify the session belongs to the authenticated user (optional check)
     // In production, you might want to link sessions to wallet addresses
 
-    // Generate proof data for smart contract
-    // Note: In production, this should use a real ZK circuit
-    // For now, we return the attributes that will be verified by the mock verifier
-    const zkProof = "0x" + "00".repeat(256); // Mock proof (256 bytes)
+    // Generate proof: use real ZK when circuit artifacts exist, else mock for MockVerifier
     const publicSignals = [
       session.flags.isVerified ? 1 : 0,
       session.flags.isAdult ? 1 : 0,
@@ -62,6 +60,8 @@ export async function POST(req: NextRequest) {
       session.flags.isNotSanctioned ? 1 : 0,
       session.flags.isUnique ? 1 : 0,
     ];
+    const zkResult = await generatePassportProof(session.flags);
+    const zkProof = zkResult?.zkProof ?? "0x" + "00".repeat(256);
 
     const attrs = {
       isVerified: session.flags.isVerified,
