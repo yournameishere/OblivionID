@@ -8,6 +8,7 @@
     "deploy:zk": "hardhat run scripts/deploy-zk.ts --network polygonAmoy",
     "grant-role": "hardhat run scripts/grant-minter-role.ts --network polygonAmoy",
     "circuit:setup": "bash scripts/setup-circuit.sh",
+    "verify": "hardhat run scripts/verify.ts --network polygonAmoy",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -15,6 +16,7 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
     "@openzeppelin/contracts": "^5.4.0",
     "dotenv": "^16.4.5",
     "hardhat": "^3.1.0",
