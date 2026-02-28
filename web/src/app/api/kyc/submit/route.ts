@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMongoClient } from "@/lib/db";
 import { createHash } from "crypto";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/ratelimit";
+import { auditLog } from "@/lib/audit";
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
+  const rl = checkRateLimit(req, RATE_LIMITS.kyc);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetIn / 1000)) } }
+    );
+  }
   const body = await req.json();
   const { sessionId, age, nationality, sanctions, human, unique } = body;
 
@@ -22,6 +31,8 @@ export async function POST(req: NextRequest) {
   const identityHash = createHash("sha256")
     .update(sessionId + (nationality || "") + (age || ""))
     .digest("hex");
+
+  await auditLog("kyc_submit", { sessionId, identityHash });
 
   await sessions.updateOne(
     { sessionId },

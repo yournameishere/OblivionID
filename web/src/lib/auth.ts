@@ -1,19 +1,30 @@
 import { NextRequest } from "next/server";
+import { verifyMessage } from "viem";
 import { getMongoClient } from "./db";
 
+/** Message that clients must sign for authentication */
+export const AUTH_MESSAGE = "Sign in to OblivionID";
+
 /**
- * Verify wallet signature for authentication
- * This is a simple implementation - in production, use proper signature verification
+ * Verify wallet signature for authentication (EIP-191 personal sign)
  */
 export async function verifyWalletAuth(
   address: string,
-  signature?: string
+  message: string,
+  signature: string
 ): Promise<boolean> {
-  if (!address) return false;
-  
-  // In production, verify the signature against a message
-  // For now, just check if address is valid format
-  return /^0x[a-fA-F0-9]{40}$/.test(address);
+  if (!address || !message || !signature) return false;
+  if (!/^0x[a-fA-F0-9]{40}$/.test(address)) return false;
+  try {
+    const valid = await verifyMessage({
+      address: address as `0x${string}`,
+      message,
+      signature: signature as `0x${string}`,
+    });
+    return valid;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -47,7 +58,8 @@ export async function getUserSession(address: string) {
 }
 
 /**
- * Middleware to require wallet authentication
+ * Middleware to require wallet authentication with signature verification
+ * Expects body: { address, message, signature, ...rest }
  * Note: This reads the request body, so call it before reading body in route handler
  */
 export async function requireAuth(req: NextRequest): Promise<{
@@ -57,10 +69,11 @@ export async function requireAuth(req: NextRequest): Promise<{
   body?: any;
 }> {
   try {
-    // Clone request to read body without consuming it
     const clonedReq = req.clone();
     const body = await clonedReq.json().catch(() => ({}));
     const address = body.address || req.headers.get("x-wallet-address");
+    const message = body.message;
+    const signature = body.signature;
 
     if (!address) {
       return {
@@ -70,11 +83,20 @@ export async function requireAuth(req: NextRequest): Promise<{
       };
     }
 
-    const isValid = await verifyWalletAuth(address);
+    // Require signature verification for authenticated routes
+    if (!message || !signature) {
+      return {
+        authenticated: false,
+        error: "Signature required. Sign the auth message with your wallet.",
+        body,
+      };
+    }
+
+    const isValid = await verifyWalletAuth(address, message, signature);
     if (!isValid) {
       return {
         authenticated: false,
-        error: "Invalid wallet address",
+        error: "Invalid signature",
         body,
       };
     }
@@ -93,4 +115,3 @@ export async function requireAuth(req: NextRequest): Promise<{
     };
   }
 }
-

@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
 import { getMongoClient } from "@/lib/db";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/ratelimit";
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
+  const rl = checkRateLimit(req, RATE_LIMITS.default);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetIn / 1000)) } }
+    );
+  }
   const { searchParams } = new URL(req.url);
   const sessionId = searchParams.get("sessionId");
   if (!sessionId) {

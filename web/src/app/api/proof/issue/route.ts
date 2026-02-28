@@ -2,11 +2,21 @@ import { NextResponse } from "next/server";
 import { getMongoClient } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { NextRequest } from "next/server";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/ratelimit";
+import { logger } from "@/lib/logger";
+import { auditLog } from "@/lib/audit";
 
 // Make this route dynamic to prevent static generation during build
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
+  const rl = checkRateLimit(req, RATE_LIMITS.proof);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetIn / 1000)) } }
+    );
+  }
   try {
     // Authentication check (this also reads the body)
     const auth = await requireAuth(req);
@@ -62,6 +72,11 @@ export async function POST(req: NextRequest) {
       identityHash: session.identityHash,
     };
 
+    await auditLog("proof_issue", {
+      sessionId,
+      address: auth.address,
+    });
+
     // Mark session as used for minting
     await col.updateOne(
       { sessionId },
@@ -75,7 +90,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ attrs, zkProof, publicSignals });
   } catch (error: any) {
-    console.error("Proof issue error:", error);
+    logger.error({ err: error }, "Proof issue error");
     return NextResponse.json(
       { error: error?.message || "Internal server error" },
       { status: 500 }

@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { logger } from "./logger";
 
 const apiKey = process.env.GEMINI_API_KEY;
 if (!apiKey) {
@@ -152,7 +153,7 @@ Be strict and accurate. Only return valid JSON.
         };
       }
     } catch (e) {
-      console.error("Failed to parse Gemini response:", e);
+      logger.error({ err: e }, "Failed to parse Gemini response");
     }
 
     // Fallback if parsing fails
@@ -172,7 +173,7 @@ Be strict and accurate. Only return valid JSON.
       errors: ["Could not parse AI response, using fallback"],
     };
   } catch (error: any) {
-    console.error("Gemini API error:", error);
+    logger.error({ err: error }, "Gemini API error");
     // Return fallback results instead of failing
     const idHash = idFile.name.length + idFile.size;
     const selfieHash = selfieFile.name.length + selfieFile.size;
@@ -236,7 +237,7 @@ export async function verifyLivenessVideo(
       errors: [],
     };
   } catch (error: any) {
-    console.error("Liveness verification error:", error);
+    logger.error({ err: error }, "Liveness verification error");
     return {
       isReal: false,
       confidence: 0.3,
@@ -246,17 +247,46 @@ export async function verifyLivenessVideo(
 }
 
 /**
- * Check sanctions list (mock - in production, use real sanctions API)
+ * Check sanctions list via OFAC API when OFAC_API_KEY is set.
+ * Falls back to mock (not sanctioned) when API key is missing.
  */
 export async function checkSanctions(
   fullName: string,
   nationality: string
 ): Promise<{ isSanctioned: boolean; confidence: number }> {
-  // In production, integrate with real sanctions API
-  // For now, return false (not sanctioned)
-  return {
-    isSanctioned: false,
-    confidence: 0.9,
-  };
+  const apiKey = process.env.OFAC_API_KEY || process.env.SANCTIONS_API_KEY;
+  if (!apiKey) {
+    return { isSanctioned: false, confidence: 0.9 };
+  }
+
+  try {
+    const res = await fetch("https://api.ofac-api.com/v4/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        apiKey,
+        sources: ["sdn", "nonsdn", "eu"],
+        cases: [{ name: fullName }],
+      }),
+    });
+    const data = await res.json();
+
+    if (data.error && data.errorMessage) {
+      logger.warn({ errorMessage: data.errorMessage }, "OFAC API error");
+      return { isSanctioned: false, confidence: 0.5 };
+    }
+
+    const results = data.results || [];
+    const matchCount = results.reduce((sum: number, r: { matchCount?: number }) => sum + (r.matchCount || 0), 0);
+    const isSanctioned = matchCount > 0;
+
+    return {
+      isSanctioned,
+      confidence: isSanctioned ? 0.95 : 0.9,
+    };
+  } catch (err) {
+    logger.error({ err }, "Sanctions check failed");
+    return { isSanctioned: false, confidence: 0.5 };
+  }
 }
 

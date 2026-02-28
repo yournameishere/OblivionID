@@ -3,11 +3,21 @@ import { getMongoClient } from "@/lib/db";
 import { randomBytes, createHash } from "crypto";
 import { verifyIDDocument, verifyLivenessVideo, checkSanctions } from "@/lib/gemini";
 import { uploadToPinata } from "@/lib/pinata";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/ratelimit";
+import { logger } from "@/lib/logger";
+import { auditLog } from "@/lib/audit";
 
 // Make this route dynamic to prevent static generation during build
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
+  const rl = checkRateLimit(req, RATE_LIMITS.kyc);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetIn / 1000)) } }
+    );
+  }
   try {
     const form = await req.formData();
     const fullName = form.get("fullName")?.toString() || "";
@@ -51,7 +61,7 @@ export async function POST(req: Request) {
       selfieIpfsHash = selfieUpload.ipfsHash;
       livenessIpfsHash = livenessUpload.ipfsHash;
     } catch (error: any) {
-      console.error("Pinata upload error:", error);
+      logger.error({ err: error }, "Pinata upload error");
       // Continue even if Pinata fails (for development)
       // Files will still be processed for verification
     }
@@ -132,6 +142,13 @@ export async function POST(req: Request) {
 
     await col.insertOne(sessionData);
 
+    await auditLog("kyc_start", {
+      sessionId,
+      address: address.toLowerCase(),
+      status: sessionData.status,
+      verified: isVerified,
+    });
+
     // Step 5: Check for duplicate identity
     const existingSession = await col.findOne({
       identityHash,
@@ -173,7 +190,7 @@ export async function POST(req: Request) {
       confidence: sessionData.aiVerification.overallConfidence,
     });
   } catch (error: any) {
-    console.error("KYC start error:", error);
+    logger.error({ err: error }, "KYC start error");
     return NextResponse.json(
       { error: error?.message || "Internal server error" },
       { status: 500 }

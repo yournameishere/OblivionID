@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMongoClient } from "@/lib/db";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/ratelimit";
+import { logger } from "@/lib/logger";
 
 // Make this route dynamic to prevent static generation during build
 export const dynamic = 'force-dynamic';
@@ -9,6 +11,13 @@ export const dynamic = 'force-dynamic';
  * Supports both GET (with address query param) and POST (with address in body)
  */
 export async function GET(req: NextRequest) {
+  const rl = checkRateLimit(req, RATE_LIMITS.default);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetIn / 1000)) } }
+    );
+  }
   try {
     const { searchParams } = new URL(req.url);
     const address = searchParams.get("address");
@@ -28,7 +37,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ session });
   } catch (error: any) {
-    console.error("Get user KYC error:", error);
+    logger.error({ err: error }, "Get user KYC error");
     return NextResponse.json(
       { error: error?.message || "Internal server error" },
       { status: 500 }
@@ -37,6 +46,13 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const rl = checkRateLimit(req, RATE_LIMITS.default);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetIn / 1000)) } }
+    );
+  }
   try {
     const body = await req.json();
     const { address } = body;
@@ -68,7 +84,7 @@ export async function POST(req: NextRequest) {
       kycId: latestVerified?.sessionId || null,
     });
   } catch (error: any) {
-    console.error("Get user KYC error:", error);
+    logger.error({ err: error }, "Get user KYC error");
     return NextResponse.json(
       { error: error?.message || "Internal server error" },
       { status: 500 }

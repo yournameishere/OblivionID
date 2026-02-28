@@ -5,6 +5,10 @@ import { privateKeyToAccount } from "viem/accounts";
 import { polygonAmoy } from "viem/chains";
 import { PASSPORT_ADDRESS, VERIFIER_ADDRESS } from "@/lib/contract";
 import { passportAbi } from "@/lib/abi";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/ratelimit";
+import { logger } from "@/lib/logger";
+import { auditLog } from "@/lib/audit";
+import { verifyWalletAuth } from "@/lib/auth";
 
 // Make this route dynamic to prevent static generation during build
 export const dynamic = 'force-dynamic';
@@ -14,9 +18,16 @@ export const dynamic = 'force-dynamic';
  * This service has MINTER_ROLE and mints passports on behalf of users
  */
 export async function POST(req: NextRequest) {
+  const rl = checkRateLimit(req, RATE_LIMITS.mint);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetIn / 1000)) } }
+    );
+  }
   try {
     const body = await req.json();
-    const { sessionId, userAddress, metadataURI = "ipfs://mock-meta" } = body;
+    const { sessionId, userAddress, metadataURI = "ipfs://mock-meta", message, signature } = body;
 
     if (!sessionId || !userAddress) {
       return NextResponse.json(
@@ -29,6 +40,14 @@ export async function POST(req: NextRequest) {
     if (!/^0x[a-fA-F0-9]{40}$/.test(userAddress)) {
       return NextResponse.json({ error: "Invalid address format" }, { status: 400 });
     }
+    if (!message || !signature) {
+      return NextResponse.json(
+        { error: "Signature required. Sign the auth message to authorize mint." },
+        { status: 401 }
+      );
+    }
+    const valid = await verifyWalletAuth(userAddress, message, signature);
+    if (!valid) return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
 
     // Get session from database
     const client = await getMongoClient();
@@ -163,9 +182,16 @@ export async function POST(req: NextRequest) {
           });
           tokenId = totalSupply as bigint;
         } catch (e) {
-          console.error("Failed to get token ID from contract:", e);
+          logger.error({ err: e }, "Failed to get token ID from contract");
         }
       }
+
+      await auditLog("mint", {
+        sessionId,
+        userAddress: userAddress.toLowerCase(),
+        txHash: hash,
+        tokenId: tokenId?.toString(),
+      });
 
       // Update session with minting info including token ID
       await col.updateOne(
@@ -189,7 +215,7 @@ export async function POST(req: NextRequest) {
         message: "Passport minted successfully",
       });
     } catch (error: any) {
-      console.error("Minting error:", error);
+      logger.error({ err: error }, "Minting error");
       
       // Check for specific errors
       if (error?.message?.includes("AlreadyMinted")) {
@@ -219,7 +245,7 @@ export async function POST(req: NextRequest) {
       );
     }
   } catch (error: any) {
-    console.error("API error:", error);
+    logger.error({ err: error }, "API error");
     return NextResponse.json(
       { error: error?.message || "Internal server error" },
       { status: 500 }

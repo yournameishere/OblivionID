@@ -1,5 +1,6 @@
 import FormData from "form-data";
 import axios from "axios";
+import { logger } from "./logger";
 
 const PINATA_API_KEY = process.env.PINATA_API_KEY;
 const PINATA_SECRET_KEY = process.env.PINATA_SECRET_KEY;
@@ -63,7 +64,7 @@ export async function uploadToPinata(
 
     return { ipfsHash, pinataUrl };
   } catch (error: any) {
-    console.error("Pinata upload error:", error);
+    logger.error({ err: error }, "Pinata upload error");
     throw new Error(`Failed to upload to Pinata: ${error?.message || "Unknown error"}`);
   }
 }
@@ -113,7 +114,7 @@ export async function uploadMetadataToPinata(
 
     return { ipfsHash, pinataUrl };
   } catch (error: any) {
-    console.error("Pinata metadata upload error:", error);
+    logger.error({ err: error }, "Pinata metadata upload error");
     throw new Error(`Failed to upload metadata to Pinata: ${error?.message || "Unknown error"}`);
   }
 }
